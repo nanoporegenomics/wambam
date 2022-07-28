@@ -1,0 +1,2 @@
+# wambam
+Quick bam QC
