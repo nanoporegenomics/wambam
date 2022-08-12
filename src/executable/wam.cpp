@@ -35,6 +35,13 @@ void get_identity_from_bam(path bam_path, path output_dir){
 
     bam_reader.for_alignment_in_bam(true, [&](SamElement& e){
 //        cerr << e.ref_name << ' ' << e.query_name << ' ' << int(e.mapq) << ' ' << e.flag << '\n';
+        if (e.mapq < 1){
+            return;
+        }
+
+        if (e.is_not_primary()){
+            return;
+        }
 
         int64_t matches = 0;
         int64_t nonmatches = 0;
