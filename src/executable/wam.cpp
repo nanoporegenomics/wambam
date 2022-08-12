@@ -31,7 +31,7 @@ void get_identity_from_bam(path bam_path, path output_dir){
 
     Bam bam_reader(bam_path);
 
-    unordered_map<int64_t, int64_t> identity_ppm_distribution;
+    unordered_map<double, int64_t> identity_distribution;
 
     bam_reader.for_alignment_in_bam(true, [&](SamElement& e){
 //        cerr << e.ref_name << ' ' << e.query_name << ' ' << int(e.mapq) << ' ' << e.flag << '\n';
@@ -47,18 +47,26 @@ void get_identity_from_bam(path bam_path, path output_dir){
                 nonmatches += length;
             }
             else if (type == 'M'){
-                throw runtime_error("ERROR: alignment contains ambiguous M operations, cannot determine mismatches without = or X operations");
+                throw runtime_error("ERROR: alignment contains ambiguous M operations, cannot determine mismatches "
+                                    "without = or X operations");
             }
         });
 
-        int64_t identity_ppm = (matches * 1000000) / (nonmatches + matches);
+        double numerator = double(matches);
+        double denominator = double(nonmatches) + double(matches);
 
-        identity_ppm_distribution[identity_ppm] += 1;
+        double identity_ppm = 0;
+        if (denominator > 0) {
+            // 7 decimals of precision is probably enough?
+            identity_ppm = round(10000000*numerator / denominator)/10000000;
+        }
+
+        identity_distribution[identity_ppm] += 1;
     });
 
     ofstream file(output_dir / "identity_distribution.csv");
-    for (auto& [ppm,count]: identity_ppm_distribution){
-        file << double(ppm)/10000 << ',' << count << '\n';
+    for (auto& [identity,count]: identity_distribution){
+        file << identity << ',' << count << '\n';
     }
 }
 
