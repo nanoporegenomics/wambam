@@ -36,9 +36,10 @@ Bam::Bam(path bam_path):
 }
 
 
-void Bam::for_alignment_in_bam(const function<void(const string& ref_name, const string& query_name, uint8_t map_quality, uint16_t flag)>& f){
+void Bam::for_alignment_in_bam(const function<void(const string& ref_name, const string& query_name, int32_t query_length, uint8_t map_quality, uint16_t flag)>& f){
     while (sam_read1(bam_file, bam_header, alignment) >= 0){
         string query_name = bam_get_qname(alignment);
+        int32_t query_length = alignment->core.l_qseq;
 
         string ref_name;
 
@@ -47,7 +48,7 @@ void Bam::for_alignment_in_bam(const function<void(const string& ref_name, const
             ref_name = bam_header->target_name[alignment->core.tid];
         }
 
-        f(ref_name, query_name, alignment->core.qual, alignment->core.flag);
+        f(ref_name, query_name, query_length, alignment->core.qual, alignment->core.flag);
     }
 }
 
@@ -56,6 +57,7 @@ void Bam::for_alignment_in_bam(bool get_cigar, const function<void(SamElement& a
     while (sam_read1(bam_file, bam_header, alignment) >= 0){
         SamElement e;
         e.query_name = bam_get_qname(alignment);
+        e.query_length = alignment->core.l_qseq;
 
         // Ref name field might be empty if read is unmapped, in which case the target (aka ref) id might not be in range
         if (alignment->core.tid < bam_header->n_targets and alignment->core.tid > -1) {

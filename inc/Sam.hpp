@@ -25,6 +25,7 @@ public:
     string query_name;
     string ref_name;
     vector<uint32_t> cigars;
+    int32_t query_length;
     uint16_t flag;
     uint8_t mapq;
 

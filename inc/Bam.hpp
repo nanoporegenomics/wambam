@@ -27,7 +27,7 @@ class Bam {
 public:
     Bam(path bam_path);
     ~Bam();
-    void for_alignment_in_bam(const function<void(const string& ref_name, const string& query_name, uint8_t map_quality, uint16_t flag)>& f);
+    void for_alignment_in_bam(const function<void(const string& ref_name, const string& query_name, int32_t query_length, uint8_t map_quality, uint16_t flag)>& f);
     void for_alignment_in_bam(bool get_cigar, const function<void(SamElement& alignment)>& f);
     static bool is_first_mate(uint16_t flag);
     static bool is_second_mate(uint16_t flag);

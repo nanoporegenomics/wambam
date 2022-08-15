@@ -9,16 +9,45 @@ using gfase::SamElement;
 using gfase::Bam;
 
 #include <unordered_map>
+#include <algorithm>
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
+#include <utility>
 #include <string>
 
 using std::unordered_map;
+using std::sort;
 using std::runtime_error;
 using std::ofstream;
 using std::cerr;
+using std::pair;
 using std::string;
+
+
+template<class T1, class T2> void write_sorted_distribution_to_file(const unordered_map<T1,T2>& distribution, path output_path){
+    vector <pair <T1, T2> > sorted_distribution(distribution.size());
+
+    size_t i=0;
+    for (auto& [key,count]: distribution){
+        sorted_distribution[i] = {key, count};
+        i++;
+    }
+
+    sort(sorted_distribution.begin(), sorted_distribution.end(),[](pair<T1,T2>& a, pair<T1,T2>& b){
+        return a.first < b.first;
+    });
+
+    ofstream file(output_path);
+
+    if (not (file.is_open() and file.good())){
+        throw runtime_error("ERROR: file could not be written: " + output_path.string());
+    }
+
+    for (auto& [key,count]: sorted_distribution){
+        file << key << ',' << count << '\n';
+    }
+}
 
 
 void get_identity_from_bam(path bam_path, path output_dir){
@@ -32,14 +61,19 @@ void get_identity_from_bam(path bam_path, path output_dir){
     Bam bam_reader(bam_path);
 
     unordered_map<double, int64_t> identity_distribution;
+    unordered_map<size_t, int64_t> length_distribution;
 
     bam_reader.for_alignment_in_bam(true, [&](SamElement& e){
 //        cerr << e.ref_name << ' ' << e.query_name << ' ' << int(e.mapq) << ' ' << e.flag << '\n';
-        if (e.mapq < 1){
+        if (e.is_not_primary()){
             return;
         }
 
-        if (e.is_not_primary()){
+        if (not e.is_supplementary()){
+            length_distribution[e.query_length]++;
+        }
+
+        if (e.mapq < 1){
             return;
         }
 
@@ -62,19 +96,17 @@ void get_identity_from_bam(path bam_path, path output_dir){
         double numerator = double(matches);
         double denominator = double(nonmatches) + double(matches);
 
-        double identity_ppm = 0;
+        double identity = 0;
         if (denominator > 0) {
             // 7 decimals of precision is probably enough?
-            identity_ppm = round(10000000*numerator / denominator)/10000000;
+            identity = round(10000000*numerator / denominator)/10000000;
         }
 
-        identity_distribution[identity_ppm] += 1;
+        identity_distribution[identity]++;
     });
 
-    ofstream file(output_dir / "identity_distribution.csv");
-    for (auto& [identity,count]: identity_distribution){
-        file << identity << ',' << count << '\n';
-    }
+    write_sorted_distribution_to_file(identity_distribution, output_dir / "identity_distribution.csv");
+    write_sorted_distribution_to_file(length_distribution, output_dir / "length_distribution.csv");
 }
 
 
