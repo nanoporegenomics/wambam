@@ -27,7 +27,7 @@ These two files can be used to plot the distribution of identity, read length, N
 A docker container with wambam is deployed at [`quay.io/jmonlong/wambam`](https://quay.io/repository/jmonlong/wambam).
 It was made with this [Dockerfile](Dockerfile).
 
-It also has R and the packages necessary to make the graphs with script described below.
+It also has R and the packages necessary to make the graphs and summary statistics with [the scripts described below](#graphs-and-summary-statistics).
 
 Within the docker container, this repo is located at `/build/wambam`. 
 So the script to make plots is at `/build/wambam/scripts/make_plots.R` for example.
