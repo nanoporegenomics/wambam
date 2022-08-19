@@ -20,7 +20,7 @@ It will contain the following output files:
 - `identity_distribution.csv` contains the number of reads for each unique identity.
 - `length_distribution.csv` contains the number of reads for each read length.
 
-These two files can be used to plot the distribution of identity, read length, N50 (see [Graphs](#graphs)).
+These two files can be used to plot the distribution of identity, read length, N50 (see [Graphs and summary statistics](#graphs-and-summary-statistics)).
 
 ## Docker container
 
