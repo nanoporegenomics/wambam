@@ -1,0 +1,13 @@
+version: 1.2
+workflows:
+  - name: wambam
+    subclass: WDL
+    description: Compute some quick QC from long reads (e.g. read length, alignment identity)
+    primaryDescriptorPath: /wdl/workflow.wdl
+    testParameterFiles:
+      - /wdl/testdata_input.json
+    branches:
+      - main
+    authors:
+      - name: Jean Monlong
+        email: jmonlong@ucsc.edu

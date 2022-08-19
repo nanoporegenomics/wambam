@@ -2,3 +2,5 @@ build/*
 .idea*
 cmake-build*
 external*
+*~
+cromwell-executions

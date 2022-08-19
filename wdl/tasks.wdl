@@ -1,0 +1,114 @@
+version 1.0
+
+task runWambam {
+    input {
+        File bamFile
+        Int memSizeGB = 10
+    }
+
+    Int diskSizeGB = round(2*size(bamFile, "GB")) + 50
+
+	command <<<
+        # Set the exit code of a pipeline to that of the rightmost command
+        # to exit with a non-zero status, or zero if all commands of the pipeline exit
+        set -o pipefail
+        # cause a bash script to exit immediately when a command fails
+        set -e
+        # cause the bash shell to treat unset variables as an error and exit immediately
+        set -u
+        # echo each line of the script to stdout so we can see what is happening
+        # to turn off echo do 'set +o xtrace'
+        set -o xtrace
+
+        wam -i ~{bamFile} -o wambam_results
+	>>>
+
+	output {
+		File identityDist = "wambam_results/identity_distribution.csv"
+		File lengthDist = "wambam_results/length_distribution.csv"
+	}
+
+    runtime {
+        memory: memSizeGB + " GB"
+        cpu: 1
+        disks: "local-disk " + diskSizeGB + " SSD"
+        docker: "quay.io/jmonlong/wambam:latest"
+        preemptible: 1
+    }
+}
+
+task makeWambamGraphs {
+    input {
+        File identityCsv
+        File lengthCsv
+        Int memSizeGB = 4
+        Int diskSizeGB = 50
+    }
+
+	command <<<
+        set -eux -o pipefail
+
+        Rscript /build/wambam/scripts/make_plots.R ~{identityCsv} ~{lengthCsv} wambam-graphs.pdf wambam-summary.csv
+	>>>
+
+	output {
+        File graphsPdf = "wambam-graphs.pdf"
+        File summaryCsv = "wambam-summary.csv"
+	}
+
+    runtime {
+        memory: memSizeGB + " GB"
+        cpu: 1
+        disks: "local-disk " + diskSizeGB + " SSD"
+        docker: "quay.io/jmonlong/wambam:latest"
+        preemptible: 1
+    }
+}
+
+task runMinimap2 {
+    input {
+        File? readsFile
+        File? referenceFile
+        String preset = "map-ont"
+        Int kSize = 15
+	    Boolean useMd = true
+        Int memSizeGB = 128
+        Int threadCount = 64
+    }
+
+    Int diskSizeGB = 10 * round(size(readsFile, "GB") + size(referenceFile, "GB")) + 50
+    Int threadMinimap = if threadCount < 5 then threadCount else threadCount - 4
+    Int threadSort = if threadCount < 5 then 1 else 4
+    Int memSort = if memSizeGB < 8 then 1 else 4
+    
+	command <<<
+        # Set the exit code of a pipeline to that of the rightmost command
+        # to exit with a non-zero status, or zero if all commands of the pipeline exit
+        set -o pipefail
+        # cause a bash script to exit immediately when a command fails
+        set -e
+        # cause the bash shell to treat unset variables as an error and exit immediately
+        set -u
+        # echo each line of the script to stdout so we can see what is happening
+        # to turn off echo do 'set +o xtrace'
+        set -o xtrace
+
+        OUTPREF=$(basename ~{readsFile} | sed -E 's/.(fastq.gz|fq.gz)*$//')
+
+        minimap2 -x ~{preset} -K 5G ~{true="--MD" false="" useMd} -a -c --eqx -t ~{threadMinimap} -k ~{kSize} ~{referenceFile} ~{readsFile} | samtools sort -@ ~{threadSort} -m ~{memSort}G > $OUTPREF.bam
+        samtools index -@ ~{threadCount} $OUTPREF.bam $OUTPREF.bam.bai
+	>>>
+
+	output {
+		File bam = glob("*.bam")[0]
+		File bam_index = glob("*.bam.bai")[0]
+	}
+
+    runtime {
+        memory: memSizeGB + " GB"
+        cpu: threadCount
+        disks: "local-disk " + diskSizeGB + " SSD"
+        docker: "mkolmogo/card_mapping"
+        preemptible: 1
+    }
+}
