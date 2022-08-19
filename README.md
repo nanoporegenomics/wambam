@@ -24,7 +24,7 @@ These two files can be used to plot the distribution of identity, read length, N
 
 ## Docker container
 
-A docker container with wambam is deployed at `quay.io/jmonlong/wambam`.
+A docker container with wambam is deployed at [`quay.io/jmonlong/wambam`](https://quay.io/repository/jmonlong/wambam).
 It was made with this [Dockerfile](Dockerfile).
 
 It also has R and the packages necessary to make the graphs with script described below.
@@ -40,7 +40,7 @@ A WDL workflow is available to:
 2. run wambam
 3. make some graphs and compute summary stats
 
-The workflow is deposited on Dockstore at: XXX
+The workflow is [deposited on Dockstore](https://dockstore.org/workflows/github.com/nanoporegenomics/wambam/wambam:main?tab=info).
 
 The tasks, workflow, and example input are in the [`wdl` folder](wdl).
 
