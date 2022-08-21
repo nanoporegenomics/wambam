@@ -19,35 +19,6 @@ colnames(id.df) = c('identity', 'n')
 id.df = id.df %>% mutate(identity=round(identity, 4)) %>%
   group_by(identity) %>% summarize(n=sum(n))
 
-## width of the bar or point
-id.width = .001
-id.breaks = seq(0,1,id.width)
-id.labels = id.breaks[-1] - id.width/2
-id.b = id.df %>% mutate(identity.c=cut(identity, id.breaks, id.labels, include.lowest=TRUE),
-                        identity.c=as.numeric(as.character(identity.c))) %>% 
-  group_by(identity.c) %>% summarize(n=sum(n)) %>% 
-  ungroup %>% arrange(identity.c) %>% mutate(prop=n/sum(n), prop.c=cumsum(prop))
-
-ggp.id.dist = ggplot(id.b, aes(x=identity.c, y=prop)) + 
-    geom_line(size=1) + 
-    theme_bw() + 
-    xlab('identity') + ylab('proportion of reads')
-
-## zoom to top 90% of data
-ggp.id.dist.90 =
-  id.b %>% filter(prop.c>.1) %>%
-  ggplot(aes(x=identity.c, y=prop)) + 
-  geom_line(size=1) + 
-  theme_bw() + 
-  xlab('identity') + ylab('proportion of reads')
-
-## cumulative distribution curve
-ggp.id.cdist = ggplot(id.b, aes(x=identity.c, y=prop.c)) + 
-    geom_line(size=1) + 
-    theme_bw() + 
-    xlab('identity') + ylab('cumulative proportion of reads') + 
-    scale_y_continuous(breaks=seq(0,1,.1))
-
 ## summary table
 id.sum = id.df %>%
   arrange(identity) %>%
@@ -57,6 +28,43 @@ id.sum = id.df %>%
   summarize(mean.identity=sum(n*identity)/sum(n),
             median.identity=identity[which.min(abs(prop.c-.5))],
             prop.identity.geq.95=sum(n[identity.geq.95])/sum(n))
+
+## width of the bar or point
+id.width = .001
+id.breaks = seq(0,1,id.width)
+id.labels = id.breaks[-1] - id.width/2
+id.b = id.df %>% mutate(identity.c=cut(identity, id.breaks, id.labels, include.lowest=TRUE),
+                        identity.c=as.numeric(as.character(identity.c))) %>% 
+  group_by(identity.c) %>% summarize(n=sum(n)) %>% 
+  ungroup %>% arrange(identity.c) %>% mutate(prop=n/sum(n), prop.c=cumsum(prop))
+
+id.sum$peak.identity = id.b$identity.c[which.max(id.b$prop)]
+
+ggp.id.dist = ggplot(id.b, aes(x=identity.c, y=prop)) + 
+    geom_line(size=1) + 
+    theme_bw() + 
+  xlab('identity') + ylab('proportion of reads') +
+  geom_vline(xintercept=id.sum$mean.identity[1], linetype=2) + 
+  geom_vline(xintercept=id.sum$median.identity[1], linetype=3) +
+  geom_vline(xintercept=id.sum$peak.identity[1], linetype=4)
+
+## zoom to top 90% of data
+ggp.id.dist.90 =
+  id.b %>% filter(prop.c>.1) %>%
+  ggplot(aes(x=identity.c, y=prop)) + 
+  geom_line(size=1) + 
+  theme_bw() + 
+  xlab('identity') + ylab('proportion of reads') +
+  geom_vline(xintercept=id.sum$mean.identity[1], linetype=2) + 
+  geom_vline(xintercept=id.sum$median.identity[1], linetype=3) +
+  geom_vline(xintercept=id.sum$peak.identity[1], linetype=4)
+
+## cumulative distribution curve
+ggp.id.cdist = ggplot(id.b, aes(x=identity.c, y=prop.c)) + 
+    geom_line(size=1) + 
+    theme_bw() + 
+    xlab('identity') + ylab('cumulative proportion of reads') + 
+    scale_y_continuous(breaks=seq(0,1,.1))
 
 ##
 ## length distribution
@@ -68,7 +76,7 @@ len.df = len.df %>%
          prop.c=cumsum(prop),
          length.log10=log10(length)) %>%
   arrange(desc(length)) %>%
-  mutate(nxx=cumsum(n*length)/sum(n*length))
+  mutate(nxx=cumsum(n*length/1e6)/sum(n*length/1e6))
 
 ## width of the bar or point
 len.width = (1+max(len.df$length)) / 1000
@@ -95,6 +103,16 @@ ggp.len.cdist = ggplot(len.b, aes(x=length.c, y=prop.c)) +
 ## NXX graph
 ggp.nxx = ggplot(len.df, aes(x=nxx, y=length)) +
   geom_vline(xintercept=.5, linetype=2) + 
+  geom_line() + theme_bw() +
+  scale_x_continuous(breaks=seq(0,1,.1)) + 
+  xlab('cumulative sequence proportion') +
+  ylab('read length')
+
+ggp.nxx.95 =
+  len.df %>% filter(nxx>=.05) %>% 
+  ggplot(aes(x=nxx, y=length)) +
+  geom_vline(xintercept=.5, linetype=2) +
+  scale_x_continuous(breaks=seq(0,1,.1)) + 
   geom_line() + theme_bw() +
   xlab('cumulative sequence proportion') +
   ylab('read length')
@@ -131,6 +149,7 @@ print(ggp.len.dist)
 print(ggp.len.dist.log10)
 print(ggp.len.cdist)
 print(ggp.nxx)
+print(ggp.nxx.95)
 dev.off()
 
 ## save sum in tsv
