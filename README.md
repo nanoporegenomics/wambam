@@ -55,7 +55,7 @@ java -jar $CROMWELL_JAR run wdl/workflow.wdl -i wdl/testdata_input.json
 ## Graphs and summary statistics
 
 The [scripts/make_plots.R](scripts/make_plots.R) script shows how to make some graphs and compute the summary statistics (e.g. median identity, read N50).
-It's used in the WDL worflow described above.
+It's used in the WDL workflow described above.
 
 To use it locally:
 
@@ -63,3 +63,22 @@ To use it locally:
 Rscript make_plots.R identity_distribution.csv length_distribution.csv wambam-graphs.pdf wambam-summary.csv
 ```
 
+Here are a few examples of graphs made by the scripts (and WDL):
+
+#### Identity distribution
+
+![](scripts/wambam-graphs-identity.png)
+
+#### Identity distribution zoomed in
+
+![](scripts/wambam-graphs-identity-zoom.png)
+
+#### Read length distribution (log-scaled axis)
+
+![](scripts/wambam-graphs-read-length-log10.png)
+
+#### Read length NX
+
+![](scripts/wambam-graphs-nx.png)
+
+*The 0-0.05 range is not shown to improve visibility because the longest reads tend to dwarf the rest of the distribution and we are more interested in the higher NXs.*
