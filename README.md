@@ -15,12 +15,6 @@ wam -i reads.bam -o wambam_results
 The input BAM must be made by aligning long reads with [minimap2](https://github.com/lh3/minimap2) using the `--eqx` flag.
 
 The output directory specified with `-o` will be created and must not exist. 
-It will contain the following output files:
-
-- `identity_distribution.csv` contains the number of reads for each unique identity.
-- `length_distribution.csv` contains the number of reads for each read length.
-
-These two files can be used to plot the distribution of identity, read length, N50 (see [Graphs and summary statistics](#graphs-and-summary-statistics)).
 
 ## Docker container
 
@@ -52,7 +46,29 @@ java -jar $CROMWELL_JAR run wdl/workflow.wdl -i wdl/testdata_input.json
 
 *`$CROMWELL_JAR` points at a `cromwell-*.jar` [Cromwell release](https://github.com/broadinstitute/cromwell/releases).*
 
-## Graphs and summary statistics
+## Example output
+
+The main executable generates an output directory containing two CSVs:
+
+1. `identity_distribution.csv` describing a histogram of observed read-level identity. For example:
+    ```
+    0.9942,11
+    0.9946,56
+    0.9947,113
+    ...
+    ```
+
+
+2. `length_distribution.csv` describing a histogram of observed read lengths. For example:
+    ```
+    35609,3
+    35610,4
+    35614,2
+    ...
+    ```
+
+
+These two files can be used to plot the distribution of identity, read length, and N50.
 
 The [scripts/make_plots.R](scripts/make_plots.R) script shows how to make some graphs and compute the summary statistics (e.g. median identity, read N50).
 It's used in the WDL workflow described above.
