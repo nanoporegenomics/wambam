@@ -73,11 +73,15 @@ These two files can be used to plot the distribution of identity, read length, a
 The [scripts/make_plots.R](scripts/make_plots.R) script shows how to make some graphs and compute the summary statistics (e.g. median identity, read N50).
 It's used in the WDL workflow described above.
 
+The first two arguments are the identity and length CSV files described above.
+The last two arguments are the name of the output PDF and summary CSV files.
 To use it locally:
 
 ```sh
 Rscript make_plots.R identity_distribution.csv length_distribution.csv wambam-graphs.pdf wambam-summary.csv
 ```
+
+Note: the scripts use the *dplyr* and *ggplot2* packages that can be installed in R with `install.packages(c("dplyr", "ggplot2"))`.
 
 Here are a few examples of graphs made by the scripts (and WDL):
 
@@ -98,3 +102,21 @@ Here are a few examples of graphs made by the scripts (and WDL):
 ![](scripts/wambam-graphs-nx.png)
 
 *The 0-0.05 range is not shown to improve visibility because the longest reads tend to dwarf the rest of the distribution and we are more interested in the higher NXs.*
+
+#### Comparing multiple samples
+
+The [scripts/make_plots_multisamples.R](scripts/make_plots_multisamples.R) script shows how to make some graphs comparing wambam results on multiple samples.
+The first argument is a TSV file with three columns: `sample` with the sample name, `identity` with the path to the *identity_distribution.csv*, `length` with the path to the *length_distribution.csv*. 
+[scripts/input_samples.tsv](scripts/input_samples.tsv) is an example of this input TSV. 
+The other two arguments are the output PDF, and output summary table.
+
+```sh
+Rscript make_plots_multisamples.R input_samples.tsv wambam-graphs-samples.pdf wambam-summary-samples.csv
+```
+
+Similar graphs as above are made but showing different samples.
+For example:
+
+![](scripts/wambam-graphs-identity-zoom-2samples.png)
+
+![](scripts/wambam-graphs-nx-2samples.png)
