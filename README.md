@@ -1,7 +1,5 @@
 # wambam
 
-**W**hy **A**sk **M**ycolleguesabouttheiropinionsonhowtonamemytoolanalyzing **BAM**s
-
 Wambam is made for quick bam QC: read identity, read lengths, N50, total yield.
 
 ## Usage
