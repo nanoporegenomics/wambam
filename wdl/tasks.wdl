@@ -71,15 +71,12 @@ task runMinimap2 {
         File? referenceFile
         String preset = "map-ont"
         Int kSize = 15
-	    Boolean useMd = true
+        Boolean useMd = true
         Int memSizeGB = 128
         Int threadCount = 64
     }
 
     Int diskSizeGB = 10 * round(size(readsFile, "GB") + size(referenceFile, "GB")) + 50
-    Int threadMinimap = if threadCount < 5 then threadCount else threadCount - 4
-    Int threadSort = if threadCount < 5 then 1 else 4
-    Int memSort = if memSizeGB < 8 then 1 else 4
     
 	command <<<
         # Set the exit code of a pipeline to that of the rightmost command
@@ -93,22 +90,20 @@ task runMinimap2 {
         # to turn off echo do 'set +o xtrace'
         set -o xtrace
 
-        OUTPREF=$(basename ~{readsFile} | sed -E 's/.(fastq.gz|fq.gz)*$//')
+        OUTPREF=$(basename ~{readsFile} | sed -E 's/.(fastq.gz|fq.gz|fasta|fasta.gz)*$//')
 
-        minimap2 -x ~{preset} -K 5G ~{true="--MD" false="" useMd} -a -c --eqx -t ~{threadMinimap} -k ~{kSize} ~{referenceFile} ~{readsFile} | samtools sort -@ ~{threadSort} -m ~{memSort}G > $OUTPREF.bam
-        samtools index -@ ~{threadCount} $OUTPREF.bam $OUTPREF.bam.bai
+        minimap2 -x ~{preset} -K 3G ~{true="--MD" false="" useMd} -a -c --eqx -t ~{threadCount} -k ~{kSize} ~{referenceFile} ~{readsFile} | samtools view -hb -o $OUTPREF.bam
 	>>>
 
 	output {
 		File bam = glob("*.bam")[0]
-		File bam_index = glob("*.bam.bai")[0]
 	}
 
     runtime {
         memory: memSizeGB + " GB"
         cpu: threadCount
         disks: "local-disk " + diskSizeGB + " SSD"
-        docker: "mkolmogo/card_mapping"
+        docker: "quay.io/jmonlong/wambam:latest"
         preemptible: 1
     }
 }

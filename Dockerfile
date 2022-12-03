@@ -44,4 +44,13 @@ RUN mkdir build && cd build && \
 
 ENV PATH=/build/wambam/build:$PATH
 
+## minimap2
+WORKDIR /build
+
+RUN wget https://github.com/lh3/minimap2/releases/download/v2.24/minimap2-2.24_x64-linux.tar.bz2 && \
+    tar -jxvf minimap2-2.24_x64-linux.tar.bz2 && \
+    rm minimap2-2.24_x64-linux.tar.bz2
+
+ENV PATH=/build/minimap2-2.24_x64-linux/:$PATH
+
 WORKDIR /home
