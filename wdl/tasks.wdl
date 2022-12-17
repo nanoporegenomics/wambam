@@ -70,7 +70,7 @@ task runMinimap2 {
         File? readsFile
         File? referenceFile
         String preset = "map-ont"
-        Int kSize = 15
+        Int kSize = 17
         Boolean useMd = true
         Int memSizeGB = 128
         Int threadCount = 64
