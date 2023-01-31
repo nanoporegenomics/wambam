@@ -71,6 +71,7 @@ task runMinimap2 {
         File? referenceFile
         String preset = "map-ont"
         Int kSize = 17
+        Int indexSplitSizeGb = 8
         Boolean useMd = true
         Int memSizeGB = 128
         Int threadCount = 64
@@ -92,7 +93,7 @@ task runMinimap2 {
 
         OUTPREF=$(basename ~{readsFile} | sed -E 's/.(fastq.gz|fq.gz|fasta|fasta.gz)*$//')
 
-        minimap2 -x ~{preset} -K 3G ~{true="--MD" false="" useMd} -a -c --eqx -t ~{threadCount} -k ~{kSize} ~{referenceFile} ~{readsFile} | samtools view -hb -o $OUTPREF.bam
+        minimap2 -x ~{preset} -K 3G ~{true="--MD" false="" useMd} -I ~{indexSplitSizeGb}g -a -c --eqx -t ~{threadCount} -k ~{kSize} ~{referenceFile} ~{readsFile} | samtools view -hb -o $OUTPREF.bam
 	>>>
 
 	output {
