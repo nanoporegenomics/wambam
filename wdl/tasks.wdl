@@ -91,9 +91,15 @@ task runMinimap2 {
         # to turn off echo do 'set +o xtrace'
         set -o xtrace
 
-        OUTPREF=$(basename ~{readsFile} | sed -E 's/.(fastq.gz|fq.gz|fasta|fasta.gz)*$//')
+        OUTPREF=$(basename ~{readsFile} | sed -E 's/.(fastq.gz|fq.gz|fasta|fasta.gz|bam)*$//')
 
-        minimap2 -x ~{preset} -K 3G ~{true="--MD" false="" useMd} -I ~{indexSplitSizeGb}g -a -c --eqx -t ~{threadCount} -k ~{kSize} ~{referenceFile} ~{readsFile} | samtools view -hb -o $OUTPREF.bam
+        INPUT_READS=~{readsFile}
+        if [ "${INPUT_READS: -3}" == "bam" ]
+        then
+            samtools fastq ~{readsFile} | minimap2 -x ~{preset} -K 3G ~{true="--MD" false="" useMd} -I ~{indexSplitSizeGb}g -a -c --eqx -t ~{threadCount} -k ~{kSize} ~{referenceFile} - | samtools view -hb -o $OUTPREF.bam
+        else
+            minimap2 -x ~{preset} -K 3G ~{true="--MD" false="" useMd} -I ~{indexSplitSizeGb}g -a -c --eqx -t ~{threadCount} -k ~{kSize} ~{referenceFile} ~{readsFile} | samtools view -hb -o $OUTPREF.bam
+        fi
 	>>>
 
 	output {

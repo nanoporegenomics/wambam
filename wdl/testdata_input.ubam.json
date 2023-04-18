@@ -1,0 +1,4 @@
+{
+  "wambam.UBAM_FILE": "data/test_alignments.bam",
+  "wambam.REFERENCE_FILE": "data/test_read_chm13_chr5.fasta"
+}

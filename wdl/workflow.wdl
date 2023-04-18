@@ -11,20 +11,22 @@ workflow wambam {
 
     parameter_meta {
         BAM_FILE: "BAM file from running minimap2 with the --eqx flag. Either provide this file or both a FASTQ_FILE and REFERENCE_FILE."
-        FASTQ_FILE: "Reads in a gzipped FASTQ file. Either provide this file and REFERENCE_FILE, or a BAM_FILE."
-        REFERENCE_FILE: "FASTA file for the reference genome. Can be gzipped. Either provide this file and FASTQ_FILE, or a BAM_FILE."
+        UBAM_FILE: "Unmapped BAM file (with unmapped reads). Either provide this file or FASTQ_FILE and REFERENCE_FILE, or a BAM_FILE."
+        FASTQ_FILE: "Reads in a gzipped FASTQ file. Either provide this file or UBAM_FILE and REFERENCE_FILE, or a BAM_FILE."
+        REFERENCE_FILE: "FASTA file for the reference genome. Can be gzipped. Either provide this file and FASTQ_FILE/UBAM_FILE, or a BAM_FILE."
     }
 
     input {
         File? BAM_FILE
+        File? UBAM_FILE
         File? FASTQ_FILE
         File? REFERENCE_FILE
     }
 
-    if(!defined(BAM_FILE) && defined(FASTQ_FILE) && defined(REFERENCE_FILE)){
+    if(!defined(BAM_FILE) && (defined(FASTQ_FILE) || defined(UBAM_FILE)) && defined(REFERENCE_FILE)){
         call tasks.runMinimap2 {
             input:
-            readsFile=FASTQ_FILE,
+            readsFile=select_first([FASTQ_FILE, UBAM_FILE]),
             referenceFile=REFERENCE_FILE
         }
     }
