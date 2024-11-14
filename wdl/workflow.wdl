@@ -46,6 +46,7 @@ workflow wambam {
     output {
         File identity_dist_csv = runWambam.identityDist
         File length_dist_csv = runWambam.lengthDist
+        File alignedSummary_tsv = runWambam.alignedSummary
         File graph_pdf = makeWambamGraphs.graphsPdf
         File summary_csv = makeWambamGraphs.summaryCsv
         File? bam = runMinimap2.bam

@@ -26,6 +26,7 @@ task runWambam {
 	output {
 		File identityDist = "wambam_results/identity_distribution.csv"
 		File lengthDist = "wambam_results/length_distribution.csv"
+        File alignedSummary = "wambam_results/alignment_summary.tsv"
 	}
 
     runtime {
