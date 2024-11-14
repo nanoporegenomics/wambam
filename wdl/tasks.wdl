@@ -32,7 +32,7 @@ task runWambam {
         memory: memSizeGB + " GB"
         cpu: 1
         disks: "local-disk " + diskSizeGB + " SSD"
-        docker: "quay.io/jmonlong/wambam:latest"
+        docker: "meredith705/wambam:latest"
         preemptible: 1
     }
 }
