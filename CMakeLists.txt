@@ -194,8 +194,11 @@ add_custom_target(
         #        OUTPUT ${PROJECT_SOURCE_DIR}/external/htslib/config.h # //TODO: at build time ${htslib_SOURCE_DIR} is not actually populated!! is an empty string
         WORKING_DIRECTORY ${HTS_DIR}
         COMMAND pwd
+        #COMMAND curl -o config.guess https://git.savannah.gnu.org/cgit/config.git/plain/config.guess
+        #COMMAND curl -o config.sub https://git.savannah.gnu.org/cgit/config.git/plain/config.sub
         COMMAND autoconf
         COMMAND autoheader
+        # added this will need to be resolved for work anywhere else
         COMMAND ./configure --disable-lzma --disable-libcurl --disable-bz2 --disable-s3 --disable-gcs --without-libdeflate --disable-plugins
         COMMAND $(MAKE) prefix=${CMAKE_SOURCE_DIR}/external/htslib/ install
 )

@@ -7,6 +7,7 @@ using ghc::filesystem::exists;
 using ghc::filesystem::create_directories;
 using gfase::SamElement;
 using gfase::Bam;
+using AlignmentSummary = gfase::Bam::AlignmentSummary;
 
 #include <unordered_map>
 #include <algorithm>
@@ -49,6 +50,40 @@ template<class T1, class T2> void write_sorted_distribution_to_file(const unorde
     }
 }
 
+void write_sorted_alignment_summary_to_file(const unordered_map<string, AlignmentSummary>& distribution, path output_path) {
+    // Vector of pairs to sort the unordered_map
+    vector<pair<string, AlignmentSummary>> sorted_distribution(distribution.size());
+
+    size_t i = 0;
+    for (auto& [key, summary] : distribution) {
+        sorted_distribution[i] = {key, summary};
+        i++;
+    }
+
+    // sort by the unique string identifier
+    sort(sorted_distribution.begin(), sorted_distribution.end(), [](pair<string, AlignmentSummary>& a, pair<string, AlignmentSummary>& b) {
+        return a.first < b.first;
+    });
+
+    ofstream file(output_path);
+    if (!(file.is_open() && file.good())) {
+        throw runtime_error("ERROR: file could not be written: " + output_path.string());
+    }
+
+    // write the header and sorted alignment summary data to a tsv
+    file << "alignmentName" << "\t" << "chr" << "\tstart_pos" << "\t" << "end_pos" << "\t" << "matches" << "\tnonmatches"
+                                                   << "\tinferred_len" << "\tidentity" << "\n";
+    for (auto& [key, summary] : sorted_distribution) {
+        file << key << '\t'
+             << summary.ref_name << '\t'
+             << summary.start << '\t'
+             << summary.end << '\t'
+             << summary.matches << '\t'
+             << summary.nonmatches << '\t'
+             << summary.inferred_length << '\t'
+             << summary.identity << '\n';
+    }
+}
 
 void get_identity_from_bam(path bam_path, path output_dir){
     if (exists(output_dir)){
@@ -62,6 +97,9 @@ void get_identity_from_bam(path bam_path, path output_dir){
 
     unordered_map<double, int64_t> identity_distribution;
     unordered_map<size_t, int64_t> length_distribution;
+    // Unordered map to store alignment summaries by unique key
+    unordered_map<string, AlignmentSummary> alignment_summaries;
+
 
     bam_reader.for_alignment_in_bam(true, [&](SamElement& e){
 //        cerr << e.ref_name << ' ' << e.query_name << ' ' << int(e.mapq) << ' ' << e.flag << '\n';
@@ -77,21 +115,37 @@ void get_identity_from_bam(path bam_path, path output_dir){
             return;
         }
 
+
         int64_t matches = 0;
         int64_t nonmatches = 0;
+        int64_t inferred_query_length = 0;
+        int64_t alignment_end = e.start_pos;
 
         e.for_each_cigar([&](auto type, auto length){
             if (type == '='){
                 matches += length;
+                inferred_query_length += length;
+                alignment_end += length;
             }
-            else if (type == 'X' or type == 'I' or type == 'D'){
+            else if (type == 'X'){
                 nonmatches += length;
+                inferred_query_length += length;
+                alignment_end += length;
+            }
+            else if (type == 'I' or type == 'D'){
+                nonmatches += length;
+                inferred_query_length += length;
+            }
+            else if (type == 'S' or type == 'H'){
+                inferred_query_length += length;
             }
             else if (type == 'M'){
                 throw runtime_error("ERROR: alignment contains ambiguous M operations, cannot determine mismatches "
                                     "without = or X operations");
             }
+
         });
+
 
         double numerator = double(matches);
         double denominator = double(nonmatches) + double(matches);
@@ -103,10 +157,19 @@ void get_identity_from_bam(path bam_path, path output_dir){
         }
 
         identity_distribution[identity]++;
+
+        // make a unique name for each alignment and insert the summary data into the map
+        string uniqueName = bam_reader.createUniqueKey(e.ref_name, e.start_pos,
+                                                         alignment_end, matches, nonmatches, e.query_name);
+        AlignmentSummary summary = {e.ref_name, e.start_pos, alignment_end, matches, nonmatches, inferred_query_length, identity};
+        alignment_summaries[uniqueName] = summary;
+
+
     });
 
     write_sorted_distribution_to_file(identity_distribution, output_dir / "identity_distribution.csv");
     write_sorted_distribution_to_file(length_distribution, output_dir / "length_distribution.csv");
+    write_sorted_alignment_summary_to_file(alignment_summaries, output_dir / "alignment_summary.tsv");
 }
 
 

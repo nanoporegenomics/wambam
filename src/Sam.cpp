@@ -16,11 +16,12 @@ using std::cerr;
 namespace gfase {
 
 
-SamElement::SamElement(string& read_name, string& ref_name, uint16_t flag, uint8_t mapq) :
+SamElement::SamElement(string& read_name, string& ref_name, uint16_t flag, uint8_t mapq, int32_t start_pos) :
         query_name(read_name),
         ref_name(ref_name),
         flag(flag),
-        mapq(mapq)
+        mapq(mapq),
+        start_pos(start_pos)
 {}
 
 
@@ -111,6 +112,7 @@ void for_element_in_sam_file(path sam_path, const function<void(SamElement& e)>&
     string read_name;
     string flag_token;
     string ref_name;
+    string start_pos;
     string mapq_token;
 
     char header_delimiter = '@';
@@ -126,7 +128,7 @@ void for_element_in_sam_file(path sam_path, const function<void(SamElement& e)>&
         if (c == '\n'){
             n_delimiters = 0;
 
-            SamElement e(read_name, ref_name, int16_t(stoi(flag_token)), int8_t(stoi(mapq_token)));
+            SamElement e(read_name, ref_name, int16_t(stoi(flag_token)), int8_t(stoi(mapq_token)), int32_t(stoi(start_pos)));
 
             f(e);
 
@@ -149,6 +151,9 @@ void for_element_in_sam_file(path sam_path, const function<void(SamElement& e)>&
             }
             else if (n_delimiters == 2){
                 ref_name += c;
+            }
+            else if (n_delimiters == 3){
+                start_pos += c;
             }
             else if (n_delimiters == 4){
                 mapq_token += c;
