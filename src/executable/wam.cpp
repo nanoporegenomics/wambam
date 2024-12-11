@@ -25,6 +25,12 @@ using std::cerr;
 using std::pair;
 using std::string;
 
+// bool compareRecords(const Record& a, const Record& b) {
+//     if (a.chromosome == b.chromosome) {
+//         return a.startPosition < b.startPosition;
+//     }
+//     return a.chromosome < b.chromosome;
+// }
 
 template<class T1, class T2> void write_sorted_distribution_to_file(const unordered_map<T1,T2>& distribution, path output_path){
     vector <pair <T1, T2> > sorted_distribution(distribution.size());
@@ -50,39 +56,63 @@ template<class T1, class T2> void write_sorted_distribution_to_file(const unorde
     }
 }
 
+void sort_bedgraph(const std::string& input_file, const std::string& output_file) {
+
+    if (std::system("command -v bedtools > /dev/null 2>&1") != 0) {
+        std::cerr << "Error: bedtools is not installed or not in PATH." << std::endl;
+    }
+    // Make the bedtools sort command
+    std::string command = "bedtools sort -i " + input_file + " > " + output_file;
+
+    // Run the command
+    int ret_code = std::system(command.c_str());
+
+    // Check the return code
+    if (ret_code != 0) {
+        std::cerr << "Error: bedtools sort failed with return code " << ret_code << std::endl;
+    } else {
+        std::cout << "Successfully sorted the BEDGraph file: " << output_file << std::endl;
+    }
+}
+
 void write_sorted_alignment_summary_to_file(const unordered_map<string, AlignmentSummary>& distribution, path output_path) {
     // Vector of pairs to sort the unordered_map
     vector<pair<string, AlignmentSummary>> sorted_distribution(distribution.size());
 
-    size_t i = 0;
-    for (auto& [key, summary] : distribution) {
-        sorted_distribution[i] = {key, summary};
-        i++;
-    }
-
-    // sort by the unique string identifier
-    sort(sorted_distribution.begin(), sorted_distribution.end(), [](pair<string, AlignmentSummary>& a, pair<string, AlignmentSummary>& b) {
-        return a.first < b.first;
-    });
+    // size_t i = 0;
+    // for (auto& [key, summary] : distribution) {
+    //     sorted_distribution[i] = {key, summary};
+    //     i++;
+    // }
 
     ofstream file(output_path);
     if (!(file.is_open() && file.good())) {
         throw runtime_error("ERROR: file could not be written: " + output_path.string());
     }
 
-    // write the header and sorted alignment summary data to a tsv
-    file << "alignmentName" << "\t" << "chr" << "\tstart_pos" << "\t" << "end_pos" << "\t" << "matches" << "\tnonmatches"
-                                                   << "\tinferred_len" << "\tidentity" << "\n";
-    for (auto& [key, summary] : sorted_distribution) {
-        file << key << '\t'
-             << summary.ref_name << '\t'
+    // write the header to the csv
+    file << "#chr" << "\tstart_pos" << "\tend_pos" << "\tidentity" << "\tmatches" << "\tnonmatches"
+                                                                << "\tinferred_len" << "\talignmentName" << "\n";
+      
+    // add bedGraph header 
+    file << "track type=bedGraph name=\"identity\" autoScale=on\n";
+
+                                                 
+
+    for (auto& [key, summary] : distribution) {
+        file << summary.ref_name << '\t'
              << summary.start << '\t'
              << summary.end << '\t'
+             << summary.identity << '\t'
              << summary.matches << '\t'
              << summary.nonmatches << '\t'
              << summary.inferred_length << '\t'
-             << summary.identity << '\n';
+             << key << '\n';
     }
+    file.close();
+
+    sort_bedgraph(output_path, output_path.string()+".sorted.bed");
+
 }
 
 void get_identity_from_bam(path bam_path, path output_dir){
@@ -132,9 +162,13 @@ void get_identity_from_bam(path bam_path, path output_dir){
                 inferred_query_length += length;
                 alignment_end += length;
             }
-            else if (type == 'I' or type == 'D'){
+            else if (type == 'I'){
                 nonmatches += length;
                 inferred_query_length += length;
+            }
+            else if (type == 'D'){
+                nonmatches += length;
+                alignment_end += length;
             }
             else if (type == 'S' or type == 'H'){
                 inferred_query_length += length;
