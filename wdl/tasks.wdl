@@ -27,6 +27,7 @@ task runWambam {
 		File identityDist = "wambam_results/identity_distribution.csv"
 		File lengthDist = "wambam_results/length_distribution.csv"
         File alignedSummary = "wambam_results/alignment_summary.tsv"
+        File bedGraph = "wambam_results/alignment_summary.tsv.sorted.bed"
 	}
 
     runtime {
