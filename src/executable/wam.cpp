@@ -92,7 +92,7 @@ void write_sorted_alignment_summary_to_file(const unordered_map<string, Alignmen
 
     // write the header to the csv
     file << "#chr" << "\tstart_pos" << "\tend_pos" << "\tidentity" << "\tmatches" << "\tnonmatches"
-                                                                << "\tinferred_len" << "\talignmentName" << "\n";
+                                                                << "\tinferred_len" << "\tmapq" << "\talignmentName" << "\n";
       
     // add bedGraph header 
     file << "track type=bedGraph name=\"identity\" autoScale=on\n";
@@ -107,6 +107,7 @@ void write_sorted_alignment_summary_to_file(const unordered_map<string, Alignmen
              << summary.matches << '\t'
              << summary.nonmatches << '\t'
              << summary.inferred_length << '\t'
+             << summary.mapq << '\t'
              << key << '\n';
     }
     file.close();
@@ -148,6 +149,9 @@ void get_identity_from_bam(path bam_path, path output_dir){
 
         int64_t matches = 0;
         int64_t nonmatches = 0;
+        // I or D > 50bps
+        int64_t indels = 0;
+        int64_t indel_total_length = 0;
         int64_t inferred_query_length = 0;
         int64_t alignment_end = e.start_pos;
 
@@ -163,11 +167,23 @@ void get_identity_from_bam(path bam_path, path output_dir){
                 alignment_end += length;
             }
             else if (type == 'I'){
-                nonmatches += length;
+                if (length < 50){
+                    nonmatches += length;
+                }
+                else {
+                    indels += 1;
+                    indel_total_length += length;
+                }
                 inferred_query_length += length;
             }
             else if (type == 'D'){
-                nonmatches += length;
+                if (length < 50){
+                    nonmatches += length;
+                }
+                else {
+                    indels += 1;
+                    indel_total_length += length;
+                }
                 alignment_end += length;
             }
             else if (type == 'S' or type == 'H'){
@@ -195,7 +211,7 @@ void get_identity_from_bam(path bam_path, path output_dir){
         // make a unique name for each alignment and insert the summary data into the map
         string uniqueName = bam_reader.createUniqueKey(e.ref_name, e.start_pos,
                                                          alignment_end, matches, nonmatches, e.query_name);
-        AlignmentSummary summary = {e.ref_name, e.start_pos, alignment_end, matches, nonmatches, inferred_query_length, identity};
+        AlignmentSummary summary = {e.ref_name, e.start_pos, alignment_end, matches, nonmatches, inferred_query_length, identity, e.mapq};
         alignment_summaries[uniqueName] = summary;
 
 

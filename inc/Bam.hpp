@@ -34,6 +34,7 @@ public:
         int64_t nonmatches;
         int64_t inferred_length;
         double identity;
+        int64_t mapq;
     };
 
 
