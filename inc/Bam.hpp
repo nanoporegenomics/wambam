@@ -32,6 +32,8 @@ public:
         int64_t end;
         int64_t matches;
         int64_t nonmatches;
+        int64_t indels;
+        int64_t indel_length;
         int64_t inferred_length;
         double identity;
         int64_t mapq;

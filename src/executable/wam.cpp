@@ -91,7 +91,7 @@ void write_sorted_alignment_summary_to_file(const unordered_map<string, Alignmen
     }
 
     // write the header to the csv
-    file << "#chr" << "\tstart_pos" << "\tend_pos" << "\tidentity" << "\tmatches" << "\tnonmatches"
+    file << "#chr" << "\tstart_pos" << "\tend_pos" << "\tidentity" << "\tmatches" << "\tnonmatches" << "\tindels" << "\tindel_total_length"
                                                                 << "\tinferred_len" << "\tmapq" << "\talignmentName" << "\n";
       
     // add bedGraph header 
@@ -106,6 +106,8 @@ void write_sorted_alignment_summary_to_file(const unordered_map<string, Alignmen
              << summary.identity << '\t'
              << summary.matches << '\t'
              << summary.nonmatches << '\t'
+             << summary.indels << '\t'
+             << summary.indel_length << '\t'
              << summary.inferred_length << '\t'
              << summary.mapq << '\t'
              << key << '\n';
@@ -211,7 +213,7 @@ void get_identity_from_bam(path bam_path, path output_dir){
         // make a unique name for each alignment and insert the summary data into the map
         string uniqueName = bam_reader.createUniqueKey(e.ref_name, e.start_pos,
                                                          alignment_end, matches, nonmatches, e.query_name);
-        AlignmentSummary summary = {e.ref_name, e.start_pos, alignment_end, matches, nonmatches, inferred_query_length, identity, e.mapq};
+        AlignmentSummary summary = {e.ref_name, e.start_pos, alignment_end, matches, nonmatches, indels, indel_total_length, inferred_query_length, identity, e.mapq};
         alignment_summaries[uniqueName] = summary;
 
 
