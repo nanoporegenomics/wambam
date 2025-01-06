@@ -2,11 +2,13 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 using std::runtime_error;
 using std::vector;
 using std::cerr;
+using std::string;
 
 
 namespace gfase{
@@ -66,6 +68,7 @@ void Bam::for_alignment_in_bam(bool get_cigar, const function<void(SamElement& a
 
         e.mapq = alignment->core.qual;
         e.flag = alignment->core.flag;
+        e.start_pos = alignment->core.pos;
 
         if (get_cigar) {
             auto n_cigar = alignment->core.n_cigar;
@@ -109,6 +112,13 @@ bool Bam::is_primary(uint16_t flag){
 
 bool Bam::is_supplementary(uint16_t flag){
     return (uint16_t(flag) >> 11) & uint16_t(1);
+}
+
+string Bam::createUniqueKey(const string& ref_name, int start, int end, int matches, int nonmatches, string qname) {
+    std::stringstream oss;
+    oss << qname << "_" << ref_name << "_" << start << "_" << end << "_"
+        << matches << "_" << nonmatches;
+    return oss.str();
 }
 
 

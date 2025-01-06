@@ -10,6 +10,7 @@ RUN apt-get update \
     wget \
     gcc \ 
     samtools \
+    bedtools \
     build-essential \
     bzip2 \
     git \

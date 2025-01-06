@@ -28,9 +28,10 @@ public:
     int32_t query_length;
     uint16_t flag;
     uint8_t mapq;
+    int32_t start_pos;
 
     SamElement();
-    SamElement(string& read_name, string& ref_name, uint16_t flag, uint8_t mapq);
+    SamElement(string& read_name, string& ref_name, uint16_t flag, uint8_t mapq, int32_t start_pos);
     bool is_first_mate() const;
     bool is_second_mate() const;
     bool is_not_primary() const;

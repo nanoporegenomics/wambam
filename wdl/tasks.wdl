@@ -26,13 +26,15 @@ task runWambam {
 	output {
 		File identityDist = "wambam_results/identity_distribution.csv"
 		File lengthDist = "wambam_results/length_distribution.csv"
+        File alignedSummary = "wambam_results/alignment_summary.tsv"
+        File bedGraph = "wambam_results/alignment_summary.tsv.sorted.bed"
 	}
 
     runtime {
         memory: memSizeGB + " GB"
         cpu: 1
         disks: "local-disk " + diskSizeGB + " SSD"
-        docker: "quay.io/jmonlong/wambam:latest"
+        docker: "meredith705/wambam:latest"
         preemptible: 1
     }
 }
