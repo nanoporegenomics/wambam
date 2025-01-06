@@ -59,7 +59,9 @@ template<class T1, class T2> void write_sorted_distribution_to_file(const unorde
 void sort_bedgraph(const std::string& input_file, const std::string& output_file) {
 
     if (std::system("command -v bedtools > /dev/null 2>&1") != 0) {
-        std::cerr << "Error: bedtools is not installed or not in PATH." << std::endl;
+        std::cerr << "WARNING: bedtools is not installed or not in PATH." << std::endl;
+        std::cerr << "WARNING: alignment_summary.tsv should be sorted with command: bedtools sort -i alignment_summary.tsv > alignment_summary.sorted.bed" << std::endl;
+        return;
     }
     // Make the bedtools sort command
     std::string command = "bedtools sort -i " + input_file + " > " + output_file;
@@ -69,7 +71,9 @@ void sort_bedgraph(const std::string& input_file, const std::string& output_file
 
     // Check the return code
     if (ret_code != 0) {
-        std::cerr << "Error: bedtools sort failed with return code " << ret_code << std::endl;
+        std::cerr << "WARNING: bed file was not sorted " << ret_code << std::endl;
+        std::cerr << "WARNING: alignment_summary.tsv should be sorted with command: bedtools sort -i alignment_summary.tsv > alignment_summary.sorted.bed" << std::endl;
+        return;
     } else {
         std::cout << "Successfully sorted the BEDGraph file: " << output_file << std::endl;
     }
@@ -114,6 +118,8 @@ void write_sorted_alignment_summary_to_file(const unordered_map<string, Alignmen
     }
     file.close();
 
+    std::cout << "Successfully wrote alignment summary file: " << output_path << std::endl;
+    std::cout << "Now sorting alignment summary into bedgraph." << std::endl;
     sort_bedgraph(output_path, output_path.string()+".sorted.bed");
 
 }
