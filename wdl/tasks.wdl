@@ -98,9 +98,9 @@ task runMinimap2 {
         INPUT_READS=~{readsFile}
         if [ "${INPUT_READS: -3}" == "bam" ]
         then
-            samtools fastq ~{readsFile} | minimap2 -x ~{preset} -K 3G ~{true="--MD" false="" useMd} -I ~{indexSplitSizeGb}g -a -c --eqx -t ~{threadCount} -k ~{kSize} ~{referenceFile} - | samtools view -hb -o $OUTPREF.bam
+            samtools fastq ~{readsFile} | minimap2 -x ~{preset} -K 3G ~{true="--MD" false="" useMd} -I ~{indexSplitSizeGb}g -a -c -L --eqx -t ~{threadCount} -k ~{kSize} ~{referenceFile} - | samtools view -hb -o $OUTPREF.bam
         else
-            minimap2 -x ~{preset} -K 3G ~{true="--MD" false="" useMd} -I ~{indexSplitSizeGb}g -a -c --eqx -t ~{threadCount} -k ~{kSize} ~{referenceFile} ~{readsFile} | samtools view -hb -o $OUTPREF.bam
+            minimap2 -x ~{preset} -K 3G ~{true="--MD" false="" useMd} -I ~{indexSplitSizeGb}g -a -c -L --eqx -t ~{threadCount} -k ~{kSize} ~{referenceFile} ~{readsFile} | samtools view -hb -o $OUTPREF.bam
         fi
 	>>>
 
