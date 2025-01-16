@@ -10,7 +10,7 @@ Use with:
 wam -i reads.bam -o wambam_results
 ```
 
-The input BAM must be made by aligning long reads with [minimap2](https://github.com/lh3/minimap2) using the `--eqx` flag.
+The input BAM must be made by aligning long reads with [minimap2](https://github.com/lh3/minimap2) using the `--eqx` flag. Wambam uses the cigar string to calculate the identity of the alignments in the BAM relative to the reference. The default behavior is to use mismatches `X` and insertions and deletions `I & D` that are less than 50 base pairs as nonmatches. These are used in the identity calculation of matches divded by matches + nonmatches. The maximum INDEL length can be set by the user as a comand line argument `-l`. 
 
 The output directory specified with `-o` will be created and must not exist. 
 
@@ -81,6 +81,17 @@ Rscript make_plots.R identity_distribution.csv length_distribution.csv wambam-gr
 
 Note: the scripts use the *dplyr* and *ggplot2* packages that can be installed in R with `install.packages(c("dplyr", "ggplot2"))`.
 
+3. `alignment_summary_50bpMaxIndel.tsv` describing the alignment per query in the BAM including the identity, matches, nonmatches, large INDELs greater than max INDEL length, total length of the large INDELs in the query, the inferred length of the query sequence ( not just the alignment length ), the mapq, and a unique alignment identifier. 
+```
+#chr    start_pos   end_pos identity    matches nonmatches  largeINDELs largeINDEL_total_length inferred_len    mapq    alignmentName
+track type=bedGraph name="identity" autoScale=on
+chr1    1664    1814    0.986667    148 2   0   0   150 60  8281a794128cc10b__chr1_1664_1814_148_2
+chr1    8948    9098    0.993333    149 1   0   0   150 60  76b8c8a10bc5daf6__chr1_8948_9098_149_1
+```
+
+4. `alignment_summary_50bpMaxIndel.tsv.sorted.bed` a bedGraph file that can be used to view alignments and their identity scores on IGV. 
+
+
 Here are a few examples of graphs made by the scripts (and WDL):
 
 #### Identity distribution
@@ -100,6 +111,12 @@ Here are a few examples of graphs made by the scripts (and WDL):
 ![](scripts/wambam-graphs-nx.png)
 
 *The 0-0.05 range is not shown to improve visibility because the longest reads tend to dwarf the rest of the distribution and we are more interested in the higher NXs.*
+
+#### Alignment Identity per Chromosome
+This plot is made using [scripts/plot_alignments.py](scripts/plot_alignments.py) and the alignment_summary.tsv output file. 
+
+![](scripts/alignment_summary.png)
+
 
 #### Comparing multiple samples
 

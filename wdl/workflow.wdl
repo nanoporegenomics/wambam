@@ -51,6 +51,5 @@ workflow wambam {
         File graph_pdf = makeWambamGraphs.graphsPdf
         File summary_csv = makeWambamGraphs.summaryCsv
         File? bam = runMinimap2.bam
-        File? bam_idx = runMinimap2.bam_idx
     }
 }
