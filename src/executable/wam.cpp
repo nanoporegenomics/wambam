@@ -95,7 +95,7 @@ void write_sorted_alignment_summary_to_file(const unordered_map<string, Alignmen
     }
 
     // write the header to the csv
-    file << "#chr" << "\tstart_pos" << "\tend_pos" << "\tidentity" << "\tmatches" << "\tnonmatches" << "\tindels" << "\tindel_total_length"
+    file << "#chr" << "\tstart_pos" << "\tend_pos" << "\tidentity" << "\tmatches" << "\tnonmatches" << "\tlargeINDELs" << "\tlargeINDEL_total_length"
                                                                 << "\tinferred_len" << "\tmapq" << "\talignmentName" << "\n";
       
     // add bedGraph header 
@@ -124,7 +124,7 @@ void write_sorted_alignment_summary_to_file(const unordered_map<string, Alignmen
 
 }
 
-void get_identity_from_bam(path bam_path, path output_dir){
+void get_identity_from_bam(path bam_path, path output_dir, int64_t max_indel_length){
     if (exists(output_dir)){
         throw runtime_error("ERROR: output directory exists already");
     }
@@ -157,7 +157,7 @@ void get_identity_from_bam(path bam_path, path output_dir){
 
         int64_t matches = 0;
         int64_t nonmatches = 0;
-        // I or D > 50bps
+        // I or D > 50bps ( max_indel_length )
         int64_t indels = 0;
         int64_t indel_total_length = 0;
         int64_t inferred_query_length = 0;
@@ -175,7 +175,7 @@ void get_identity_from_bam(path bam_path, path output_dir){
                 alignment_end += length;
             }
             else if (type == 'I'){
-                if (length < 50){
+                if (length < max_indel_length){
                     nonmatches += length;
                 }
                 else {
@@ -185,7 +185,7 @@ void get_identity_from_bam(path bam_path, path output_dir){
                 inferred_query_length += length;
             }
             else if (type == 'D'){
-                if (length < 50){
+                if (length < max_indel_length){
                     nonmatches += length;
                 }
                 else {
@@ -227,13 +227,15 @@ void get_identity_from_bam(path bam_path, path output_dir){
 
     write_sorted_distribution_to_file(identity_distribution, output_dir / "identity_distribution.csv");
     write_sorted_distribution_to_file(length_distribution, output_dir / "length_distribution.csv");
-    write_sorted_alignment_summary_to_file(alignment_summaries, output_dir / "alignment_summary.tsv");
+    string summaryFilename = "alignment_summary_" + std::to_string(max_indel_length) + "bpMaxIndel.tsv";
+    write_sorted_alignment_summary_to_file(alignment_summaries, output_dir / summaryFilename);
 }
 
 
 int main (int argc, char* argv[]){
     path bam_path;
     path output_dir;
+    int64_t max_indel_length;
 
     CLI::App app{"App description"};
 
@@ -249,9 +251,15 @@ int main (int argc, char* argv[]){
             "Path to directory which will be created for output (must not exist already)")
             ->required();
 
+    app.add_option(
+            "-l,--max_indel_length",
+            max_indel_length,
+            "max indel length to be counted as a mismatch")
+            ->default_val(50);
+
     CLI11_PARSE(app, argc, argv);
 
-    get_identity_from_bam(bam_path, output_dir);
+    get_identity_from_bam(bam_path, output_dir, max_indel_length);
 
     return 0;
 }
