@@ -175,7 +175,7 @@ void get_identity_from_bam(path bam_path, path output_dir, int64_t max_indel_len
                 alignment_end += length;
             }
             else if (type == 'I'){
-                if (length < max_indel_length){
+                if (length <= max_indel_length){
                     nonmatches += length;
                 }
                 else {
@@ -185,7 +185,7 @@ void get_identity_from_bam(path bam_path, path output_dir, int64_t max_indel_len
                 inferred_query_length += length;
             }
             else if (type == 'D'){
-                if (length < max_indel_length){
+                if (length <= max_indel_length){
                     nonmatches += length;
                 }
                 else {
